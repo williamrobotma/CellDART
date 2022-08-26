@@ -17,6 +17,5 @@ dependencies:
   - seaborn=0.11.2
   - statsmodels=0.13.2
   - tensorflow=2.9.1
-  - tensorflow-gpu=2.9.1
+  # - tensorflow-gpu=2.9.1
   - umap-learn=0.5.3
-prefix: C:\Users\USER\Anaconda3\envs\CellDART

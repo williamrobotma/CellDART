@@ -1,4 +1,14 @@
+# Byte-compiled / optimized / DLL files
+**/__pycache__/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
 .Rproj.user
 inst/doc
 /doc/
 /Meta/
+
+# data files
+data/
+!data/datafile.md
