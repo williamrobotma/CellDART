@@ -124,6 +124,7 @@ def train( Xs, ys, Xt, yt=None,
         adv_weights = []
         for layer in model.layers:
             if (layer.name.startswith("do")):
+                # print(layer.name)
                 adv_weights.append(layer.get_weights())
 
         if(enable_dann):
@@ -143,6 +144,8 @@ def train( Xs, ys, Xt, yt=None,
         
             for layer in model.layers:
                 if (not layer.name.startswith("do")):
+                    # if i == 0:
+                        # print(layer.name)
                     class_weights.append(layer.get_weights())
             
             domain_classification_model.train_on_batch(X_adv, [y_adversarial_2])
@@ -162,7 +165,7 @@ def train( Xs, ys, Xt, yt=None,
                 # print(i, stats)
                 sourceloss, sourceacc = source_classification_model.evaluate(Xs, ys,verbose=0)
                 domainloss,domainacc  = domain_classification_model.evaluate(np.concatenate([Xs, Xt]),
-                                                                     to_categorical(np.array(([1] * Xs.shape[0] + [0] * Xt.shape[0]))),
+                                                                     to_categorical(np.array(([0] * Xs.shape[0] + [1] * Xt.shape[0]))),
                                                                      verbose=0)
                 print("Iteration %d, source loss =  %.3f, discriminator acc = %.3f"%(i, sourceloss ,domainacc))
         else:
