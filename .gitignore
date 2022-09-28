@@ -2,7 +2,11 @@
 **/__pycache__/
 
 # Jupyter Notebook
-.ipynb_checkpoints
+**/.ipynb_checkpoints
+
+# vscode
+.vscode
+**/*.code-workspace
 
 .Rproj.user
 inst/doc
