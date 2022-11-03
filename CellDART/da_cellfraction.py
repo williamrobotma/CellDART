@@ -18,6 +18,8 @@ from tensorflow.keras import optimizers
 from sklearn.metrics import accuracy_score
 
 
+import tensorflow as tf
+
 ### Build deep learning models for adversarial domain adaptation
 def build_models(inp_dim, emb_dim, n_cls_source, alpha=2, alpha_lr=10):
     inputs = Input(shape=(inp_dim, ))
@@ -116,9 +118,12 @@ def train(
     alpha=2,
     alpha_lr=10,
     initial_train=True,
-    initial_train_epochs=100
+    initial_train_epochs=100,
+    seed=None,
 ):
-
+    if seed is not None:
+        tf.keras.utils.set_random_seed(seed)
+        
     inp_dim = Xs.shape[1]
     ncls_source = ys.shape[1]
 
