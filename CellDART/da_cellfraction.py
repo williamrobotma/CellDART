@@ -137,6 +137,7 @@ def train(
         print("initial_train_done")
 
     source_classification_model_no_da = clone_model(source_classification_model)
+    embeddings_model_no_da = clone_model(embeddings_model)
     y_adversarial_1 = to_categorical(np.array(([1] * batch_size + [0] * batch_size)))
 
     sample_weights_class = np.array(([1] * batch_size + [0] * batch_size))
@@ -223,4 +224,4 @@ def train(
                     )
                 )
 
-    return embeddings_model, source_classification_model, source_classification_model_no_da
+    return embeddings_model, embeddings_model_no_da, source_classification_model, source_classification_model_no_da
