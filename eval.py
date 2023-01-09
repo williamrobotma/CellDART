@@ -33,7 +33,7 @@ import harmonypy as hm
 # from src.da_models.dann import DANN
 # from src.da_models.datasets import SpotDataset
 # from src.utils.evaluation import JSD
-from src.utils.data_loading import load_spatial, load_sc
+from src.utils.data_loading import load_spatial, load_sc, get_selected_dir
 
 # datetime object containing current date and time
 script_start_time = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%S")
@@ -46,6 +46,13 @@ script_start_time = datetime.datetime.now().strftime("%Y-%m-%d_%Hh%Mm%S")
 
 
 TRAIN_USING_ALL_ST_SAMPLES = False
+N_MARKERS = 20
+ALL_GENES = False
+
+ST_SPLIT = False
+N_SPOTS = 20000
+N_MIX = 8
+SCALER_NAME = "celldart"
 
 SAMPLE_ID_N = "151673"
 
@@ -53,7 +60,7 @@ BATCH_SIZE = 512
 NUM_WORKERS = 16
 
 
-PROCESSED_DATA_DIR = "../AGrEDA/data/preprocessed_markers_celldart"
+DATA_DIR = "../AGrEDA/data"
 
 ST_SPLIT = False
 
@@ -88,12 +95,24 @@ sc.settings.verbosity = 3
 # %%
 print("Loading Data")
 # Load spatial data
-mat_sp_d, mat_sp_train_s, st_sample_id_l = load_spatial(
-    TRAIN_USING_ALL_ST_SAMPLES, PROCESSED_DATA_DIR, ST_SPLIT
+
+selected_dir = get_selected_dir(DATA_DIR, N_MARKERS, ALL_GENES)
+# Load spatial data
+mat_sp_d, mat_sp_train, st_sample_id_l = load_spatial(
+    get_selected_dir(DATA_DIR, N_MARKERS, ALL_GENES),
+    SCALER_NAME,
+    train_using_all_st_samples=TRAIN_USING_ALL_ST_SAMPLES,
+    st_split=ST_SPLIT,
 )
 
 # Load sc data
-sc_mix_d, lab_mix_d, sc_sub_dict, sc_sub_dict2 = load_sc(PROCESSED_DATA_DIR)
+sc_mix_d, lab_mix_d, sc_sub_dict, sc_sub_dict2 = load_sc(
+    get_selected_dir(DATA_DIR, N_MARKERS, ALL_GENES),
+    SCALER_NAME,
+    n_mix=N_MIX,
+    n_spots=N_SPOTS,
+)
+
 
 
 # %% [markdown]
@@ -127,7 +146,7 @@ if TRAIN_USING_ALL_ST_SAMPLES:
         os.path.join(advtrain_folder, "all_st_samps", "final_model")
     )
     for sample_id in st_sample_id_l:
-        pred_sp_d[sample_id] = model.predict(mat_sp_d["test"][sample_id])
+        pred_sp_d[sample_id] = model.predict(mat_sp_d[sample_id]["test"])
 
     # TODO: add pretraining
     if PRETRAINING:
@@ -136,14 +155,14 @@ if TRAIN_USING_ALL_ST_SAMPLES:
             os.path.join(pretrain_folder, "all_st_samps", "final_model")
         )
         for sample_id in st_sample_id_l:
-            pred_sp_noda_d[sample_id] = model_noda.predict(mat_sp_d["test"][sample_id])
+            pred_sp_noda_d[sample_id] = model_noda.predict(mat_sp_d[sample_id]["test"])
 
 else:
     for sample_id in st_sample_id_l:
         model = keras.models.load_model(
             os.path.join(advtrain_folder, sample_id, "final_model")
         )
-        pred_sp_d[sample_id] = model.predict(mat_sp_d["test"][sample_id])
+        pred_sp_d[sample_id] = model.predict(mat_sp_d[sample_id]["test"])
 
     if PRETRAINING:
         pred_sp_noda_d = {}
@@ -151,7 +170,7 @@ else:
             model_noda = keras.models.load_model(
                 os.path.join(pretrain_folder, sample_id, "final_model")
             )
-            pred_sp_noda_d[sample_id] = model_noda.predict(mat_sp_d["test"][sample_id])
+            pred_sp_noda_d[sample_id] = model_noda.predict(mat_sp_d[sample_id]["test"])
 
 
 # %% [markdown]
@@ -196,7 +215,7 @@ for sample_id in st_sample_id_l:
         print(split, end=" ")
         figs = []
 
-        X_target = mat_sp_d["test"][sample_id]
+        X_target = mat_sp_d[sample_id]["test"]
 
         y_dis = np.concatenate(
             [
@@ -327,7 +346,7 @@ for sample_id in st_sample_id_l:
 
 # %%
 adata_spatialLIBD = sc.read_h5ad(
-    os.path.join(PROCESSED_DATA_DIR, "adata_spatialLIBD.h5ad")
+    os.path.join(selected_dir, "adata_spatialLIBD.h5ad")
 )
 
 adata_spatialLIBD_d = {}
@@ -565,11 +584,12 @@ for sample_id in st_sample_id_l:
 # %%
 def jsd(y_true, y_pred):
 
+    kl = keras.losses.KLDivergence()
     m = 0.5 * (y_true + y_pred)
     return 0.5 * (
-        keras.losses.kullback_leibler_divergence(y_true, m)
-        + keras.losses.kullback_leibler_divergence(y_pred, m)
-    ).numpy().mean()
+        kl(y_true, m)
+        + kl(y_pred, m)
+    ).numpy()
 
 
 # %%
