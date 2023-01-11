@@ -5,6 +5,9 @@ import os
 import datetime
 from collections import defaultdict
 
+from joblib import parallel_backend
+
+
 
 import pandas as pd
 import numpy as np
@@ -61,6 +64,7 @@ NUM_WORKERS = 16
 
 
 DATA_DIR = "../AGrEDA/data"
+# DATA_DIR = "./data_combine"
 
 ST_SPLIT = False
 
@@ -71,8 +75,8 @@ PRETRAINING = True
 MILISI = True
 
 # %%
-results_folder = os.path.join("results", MODEL_NAME, script_start_time)
-model_folder = os.path.join("model", MODEL_NAME, script_start_time)
+# results_folder = os.path.join("results", MODEL_NAME, script_start_time)
+# model_folder = os.path.join("model", MODEL_NAME, script_start_time)
 
 model_folder = os.path.join("model", MODEL_NAME, MODEL_VERSION)
 results_folder = os.path.join("results", MODEL_NAME, MODEL_VERSION)
@@ -99,7 +103,7 @@ print("Loading Data")
 selected_dir = get_selected_dir(DATA_DIR, N_MARKERS, ALL_GENES)
 # Load spatial data
 mat_sp_d, mat_sp_train, st_sample_id_l = load_spatial(
-    get_selected_dir(DATA_DIR, N_MARKERS, ALL_GENES),
+    selected_dir,
     SCALER_NAME,
     train_using_all_st_samples=TRAIN_USING_ALL_ST_SAMPLES,
     st_split=ST_SPLIT,
@@ -107,7 +111,7 @@ mat_sp_d, mat_sp_train, st_sample_id_l = load_spatial(
 
 # Load sc data
 sc_mix_d, lab_mix_d, sc_sub_dict, sc_sub_dict2 = load_sc(
-    get_selected_dir(DATA_DIR, N_MARKERS, ALL_GENES),
+    selected_dir,
     SCALER_NAME,
     n_mix=N_MIX,
     n_spots=N_SPOTS,
@@ -199,14 +203,14 @@ for sample_id in st_sample_id_l:
     print(f"Calculating domain shift for {sample_id}:", end=" ")
     random_states = random_states + 1
 
-    model = keras.models.load_model(
-        os.path.join(advtrain_folder, sample_id, "final_model")
-    )
+    # model = keras.models.load_model(
+    #     os.path.join(advtrain_folder, sample_id, "final_model")
+    # )
     embs = keras.models.load_model(os.path.join(advtrain_folder, sample_id, "embs"))
     if PRETRAINING:
-        model_noda = keras.models.load_model(
-            os.path.join(pretrain_folder, sample_id, "final_model")
-        )
+        # model_noda = keras.models.load_model(
+        #     os.path.join(pretrain_folder, sample_id, "final_model")
+        # )
         embs_noda = keras.models.load_model(
             os.path.join(pretrain_folder, sample_id, "embs")
         )
@@ -271,17 +275,17 @@ for sample_id in st_sample_id_l:
             dpi=300,
         )
         plt.close()
-
-        if MILISI:
-            meta_df = pd.DataFrame(y_dis, columns=["Domain"])
-            miLISI_d["da"][split][sample_id] = np.median(
-                hm.compute_lisi(emb, meta_df, ["Domain"])
-            )
-
-            if PRETRAINING:
-                miLISI_d["noda"][split][sample_id] = np.median(
-                    hm.compute_lisi(emb_noda, meta_df, ["Domain"])
+        with parallel_backend("threading", n_jobs=-1):
+            if MILISI:
+                meta_df = pd.DataFrame(y_dis, columns=["Domain"])
+                miLISI_d["da"][split][sample_id] = np.median(
+                    hm.compute_lisi(emb, meta_df, ["Domain"])
                 )
+
+                if PRETRAINING:
+                    miLISI_d["noda"][split][sample_id] = np.median(
+                        hm.compute_lisi(emb_noda, meta_df, ["Domain"])
+                    )
 
         if PRETRAINING:
             (

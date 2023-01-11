@@ -17,5 +17,9 @@ inst/doc
 data/
 !data/datafile.md
 
+# model run files
 model/
 results/
+
+# scratchpad
+scratchpad.ipynb
