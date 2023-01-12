@@ -8,7 +8,6 @@ from collections import defaultdict
 from joblib import parallel_backend
 
 
-
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -116,7 +115,6 @@ sc_mix_d, lab_mix_d, sc_sub_dict, sc_sub_dict2 = load_sc(
     n_mix=N_MIX,
     n_spots=N_SPOTS,
 )
-
 
 
 # %% [markdown]
@@ -349,9 +347,7 @@ for sample_id in st_sample_id_l:
 #   # 4. Predict cell fraction of spots and visualization
 
 # %%
-adata_spatialLIBD = sc.read_h5ad(
-    os.path.join(selected_dir, "adata_spatialLIBD.h5ad")
-)
+adata_spatialLIBD = sc.read_h5ad(os.path.join(selected_dir, "adata_spatialLIBD.h5ad"))
 
 adata_spatialLIBD_d = {}
 for sample_id in st_sample_id_l:
@@ -590,12 +586,11 @@ def jsd(y_true, y_pred):
 
     kl = keras.losses.KLDivergence()
     m = 0.5 * (y_true + y_pred)
-    return 0.5 * (
-        kl(y_true, m)
-        + kl(y_pred, m)
-    ).numpy()
+    return 0.5 * (kl(y_true, m) + kl(y_pred, m)).numpy()
 
 
+# def jsd(y_true, y_pred):
+#     return keras.losses.KLDivergence()(y_true, y_pred).numpy()
 # %%
 jsd_d = {"da": {}}
 if PRETRAINING:
@@ -640,9 +635,7 @@ for sample_id in st_sample_id_l:
 
         target_names = [sc_sub_dict[i] for i in range(len(sc_sub_dict))]
 
-        jsd_d["noda"]["train"][sample_id] = jsd(
-            lab_mix_d["train"], pred_mix_train
-        )
+        jsd_d["noda"]["train"][sample_id] = jsd(lab_mix_d["train"], pred_mix_train)
         jsd_d["noda"]["val"][sample_id] = jsd(lab_mix_d["val"], pred_mix_val)
         jsd_d["noda"]["test"][sample_id] = jsd(lab_mix_d["test"], pred_mix_test)
 
@@ -687,7 +680,7 @@ results_df = pd.concat(
 )
 
 results_df.to_csv(os.path.join(results_folder, "results.csv"))
-results_df
+print(results_df)
 
 
 # %%

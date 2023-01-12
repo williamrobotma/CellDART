@@ -135,9 +135,27 @@ def train(
             Xs, ys, batch_size=batch_size, epochs=initial_train_epochs
         )
         print("initial_train_done")
+        sourceloss, sourceacc = source_classification_model.evaluate(
+                    Xs, ys, verbose=0
+        )
+        print(sourceloss)
 
     source_classification_model_no_da = clone_model(source_classification_model)
+    source_classification_model_no_da.set_weights(source_classification_model.get_weights())
+    source_classification_model_no_da.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        loss={'mo': 'kld'},
+        metrics=['mae'],
+    )
+    sourceloss, sourceacc = source_classification_model_no_da.evaluate(
+                Xs, ys, verbose=0
+    )
+    print(sourceloss)
     embeddings_model_no_da = clone_model(embeddings_model)
+    embeddings_model_no_da.set_weights(embeddings_model.get_weights())
+    embeddings_model_no_da.compile(
+        optimizer="Adam", loss='categorical_crossentropy', metrics=['accuracy']
+    )
     y_adversarial_1 = to_categorical(np.array(([1] * batch_size + [0] * batch_size)))
 
     sample_weights_class = np.array(([1] * batch_size + [0] * batch_size))
