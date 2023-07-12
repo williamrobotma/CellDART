@@ -140,9 +140,8 @@ dmypy.json
 # data models and results directories
 data/
 !data/datafile.md
-/model/
-/model_cell_dart/
-/results/
+/model*/
+/results*/
 /logs/
 *.out
 

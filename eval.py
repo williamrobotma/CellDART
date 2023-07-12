@@ -54,7 +54,7 @@ ALL_GENES = False
 ST_SPLIT = False
 N_SPOTS = 20000
 N_MIX = 8
-SCALER_NAME = "celldart"
+SCALER_NAME = "minmax"
 
 SAMPLE_ID_N = "151673"
 

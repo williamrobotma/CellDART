@@ -20,6 +20,9 @@ pip install --no-index --upgrade pip
 
 
 mkdir -p "${install_dir}/wheels"
+if ! [ -f "${install_dir}/wheels/matplotlib-venn-0.11.7.tar.gz" ]; then
+    pip download --no-deps matplotlib-venn==0.11.7 -d "${install_dir}/wheels"
+fi
 if ! [ -f "${install_dir}/wheels/harmonypy-0.0.9-py3-none-any.whl" ]; then
     pip download --no-deps harmonypy==0.0.9 -d "${install_dir}/wheels"
 fi
