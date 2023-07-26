@@ -25,20 +25,20 @@ experimental_run_tf_function = False
 
 
 ### Build deep learning models for adversarial domain adaptation
-def build_models(inp_dim, emb_dim, n_cls_source, alpha=2, alpha_lr=10):
+def build_models(inp_dim, emb_dim, n_cls_source, alpha=2, alpha_lr=10, bn_momentum=0.99):
     inputs = Input(shape=(inp_dim,))
     x4 = Dense(1024, activation="linear")(inputs)
-    x4 = BatchNormalization()(x4)
+    x4 = BatchNormalization(momentum=bn_momentum)(x4)
     x4 = Activation("elu")(x4)
     x4 = Dense(emb_dim, activation="linear")(x4)
-    x4 = BatchNormalization()(x4)
+    x4 = BatchNormalization(momentum=bn_momentum)(x4)
     x4 = Activation("elu")(x4)
 
     source_classifier = Dense(n_cls_source, activation="linear", name="mo1")(x4)
     source_classifier = Activation("softmax", name="mo")(source_classifier)
 
     domain_classifier = Dense(32, activation="linear", name="do4")(x4)
-    domain_classifier = BatchNormalization(name="do5")(domain_classifier)
+    domain_classifier = BatchNormalization(name="do5", momentum=bn_momentum)(domain_classifier)
     domain_classifier = Activation("elu", name="do6")(domain_classifier)
     domain_classifier = Dropout(0.5)(domain_classifier)
     domain_classifier = Dense(2, activation="softmax", name="do")(domain_classifier)
@@ -116,6 +116,7 @@ def train(
     alpha_lr=10,
     initial_train=True,
     initial_train_epochs=100,
+    bn_momentum=0.99,
     seed=None,
 ):
     if seed is not None:
@@ -129,7 +130,9 @@ def train(
         source_classification_model,
         domain_classification_model,
         embeddings_model,
-    ) = build_models(inp_dim, emb_dim, ncls_source, alpha=alpha, alpha_lr=alpha_lr)
+    ) = build_models(
+        inp_dim, emb_dim, ncls_source, alpha=alpha, alpha_lr=alpha_lr, bn_momentum=bn_momentum
+    )
 
     if batch_size_initial_train is None:
         batch_size_initial_train = batch_size
